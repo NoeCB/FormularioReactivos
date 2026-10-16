@@ -6,6 +6,8 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { addIcons } from 'ionicons';
+import { moonOutline, sunnyOutline, downloadOutline } from 'ionicons/icons';
 import {
   IonHeader,
   IonToolbar,
@@ -14,15 +16,20 @@ import {
   IonList,
   IonItem,
   IonInput,
-  IonSelect,
-  IonSelectOption,
   IonButton,
+  IonButtons,
+  IonIcon,
   IonSpinner,
   IonToast,
   IonNote,
   IonDatetime,
   IonModal,
 } from '@ionic/angular';
+import { ThemeService } from '../core/theme.service';
+import { PdfService, DatosRegistro } from '../core/pdf.service';
+import { fechaNoFuturaValidator } from '../core/validadores';
+import { hashSha256 } from '../core/password.util';
+import { formatearFecha } from '../core/fecha.util';
 
 @Component({
   selector: 'app-registro',
@@ -38,9 +45,9 @@ import {
     IonList,
     IonItem,
     IonInput,
-    IonSelect,
-    IonSelectOption,
     IonButton,
+    IonButtons,
+    IonIcon,
     IonSpinner,
     IonToast,
     IonNote,
@@ -50,103 +57,156 @@ import {
 })
 export class RegistroPage {
   private fb = inject(FormBuilder);
+  private tema = inject(ThemeService);
+  private pdf = inject(PdfService);
 
-  // Formulario reactivo para el alta de productos de inventario
-  public inventarioForm: FormGroup;
+  /** Formulario reactivo de registro de usuario. */
+  public registroForm: FormGroup;
 
-  // Signal que gestiona el estado de envío (loader / desactivar formulario)
+  /** Estado de envío: desactiva el formulario y muestra el loader. */
   public isSubmitting = signal<boolean>(false);
 
-  // Signal que controla la visibilidad del ion-toast de confirmación
+  /** Control del aviso emergente de confirmación o error. */
   public toastAbierto = signal<boolean>(false);
+  public toastMensaje = signal<string>('');
+  public toastColor = signal<'success' | 'danger'>('success');
 
-  // Categorías disponibles para el ion-select
-  public categorias = ['Electrónica', 'Herramientas', 'Consumibles'];
+  /** Gobierna la apertura del calendario. */
+  public calendarioAbierto = signal<boolean>(false);
 
-  constructor() {
-    this.inventarioForm = this.fb.group({
-      // Código de barras (SKU): obligatorio, exactamente 12 caracteres alfanuméricos
-      sku: ['', [Validators.required, skuValidator]],
-      // Nombre del producto: obligatorio
-      nombre: ['', [Validators.required]],
-      // Categoría: obligatoria, seleccionada de un desplegable
-      categoria: ['', [Validators.required]],
-      // Stock mínimo: obligatorio, numérico y mayor que 0
-      stockMinimo: [
-        null,
-        [Validators.required, Validators.min(1)],
-      ],
-      // Fecha de nacimiento: obligatoria, seleccionada con el calendario
-      fechaNacimiento: ['', [Validators.required]],
-    });
-  }
+  /** Datos del último envío correcto, origen del PDF. */
+  public ultimosDatos = signal<DatosRegistro | null>(null);
 
-  // Fecha máxima seleccionable en el calendario (hoy, en formato ISO yyyy-MM-dd)
+  /** Fecha máxima seleccionable: hoy, en formato ISO. */
   public fechaMaxima = new Date().toISOString().split('T')[0];
 
-  // Getter de conveniencia para acceder a los controles desde la plantilla
-  get f() {
-    return this.inventarioForm.controls;
-  }
+  /** Valor de la fecha antes de abrir el calendario, para poder cancelar. */
+  private valorFechaPrevio: string | null = null;
 
-  // Handler del calendario: guarda el valor en el control reactivo
-  public onFechaChange(event: CustomEvent): void {
-    const valor = (event.detail as { value?: string | string[] }).value;
-    const fecha = Array.isArray(valor) ? valor[0] : valor ?? '';
-    this.inventarioForm.get('fechaNacimiento')?.setValue(fecha);
-    this.inventarioForm.get('fechaNacimiento')?.markAsTouched();
-  }
+  constructor() {
+    addIcons({ moonOutline, sunnyOutline, downloadOutline });
 
-  // Devuelve la fecha seleccionada en formato legible (dd/mm/aaaa) para el input
-  public fechaFormateada(): string {
-    const valor: string = this.f['fechaNacimiento'].value;
-    if (!valor) {
-      return '';
-    }
-    const fecha = new Date(valor);
-    return fecha.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+    this.registroForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: [
+        '',
+        [
+          Validators.required,
+          // Mínimo 8 caracteres, al menos una letra y un número.
+          Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/),
+        ],
+      ],
+      fechaNacimiento: ['', [Validators.required, fechaNoFuturaValidator]],
     });
   }
 
+  /** Acceso cómodo a los controles desde la plantilla. */
+  get f() {
+    return this.registroForm.controls;
+  }
+
+  /** Cierto cuando la aplicación está en modo oscuro. */
+  get temaOscuro(): boolean {
+    return this.tema.oscuro();
+  }
+
+  alternarTema(): void {
+    this.tema.alternar();
+  }
+
+  // --- Calendario -----------------------------------------------------------
+
+  abrirCalendario(): void {
+    if (this.isSubmitting()) {
+      return;
+    }
+    this.valorFechaPrevio = this.f['fechaNacimiento'].value ?? null;
+    this.calendarioAbierto.set(true);
+  }
+
+  /** Conserva la fecha elegida y cierra el calendario. */
+  aceptarFecha(): void {
+    this.f['fechaNacimiento'].markAsTouched();
+    this.calendarioAbierto.set(false);
+  }
+
+  /**
+   * Devuelve el valor anterior y cierra el calendario.
+   * Al enlazar el ion-datetime con formControlName, el control ya se ha
+   * actualizado al pulsar un día, así que cancelar implica restaurar.
+   */
+  cancelarFecha(): void {
+    this.f['fechaNacimiento'].setValue(this.valorFechaPrevio);
+    this.f['fechaNacimiento'].markAsTouched();
+    this.calendarioAbierto.set(false);
+  }
+
+  /** Fecha del control en formato dd/mm/aaaa para mostrarla en el campo. */
+  fechaFormateada(): string {
+    return formatearFecha(this.f['fechaNacimiento'].value);
+  }
+
+  // --- Envío ----------------------------------------------------------------
+
   public async onSubmit(): Promise<void> {
-    if (this.inventarioForm.invalid) {
-      this.inventarioForm.markAllAsTouched(); // Fuerza la visualización de errores
+    if (this.registroForm.invalid) {
+      this.registroForm.markAllAsTouched();
       return;
     }
 
     this.isSubmitting.set(true);
 
     try {
-      const formData = this.inventarioForm.value;
-      console.log('Producto a guardar (payload):', formData);
+      const { nombre, email, password, fechaNacimiento } = this.registroForm.value;
 
-      // Simulación de una petición de guardado local (async)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // La contraseña se cifra antes de construir el payload, de modo que
+      // nunca llega a consola ni al PDF en texto plano.
+      const passwordHash = await hashSha256(password);
 
-      // Confirmación de guardado mediante ion-toast
-      this.toastAbierto.set(true);
+      const payload: DatosRegistro = {
+        nombre,
+        email,
+        fechaNacimiento,
+        passwordHash,
+      };
 
-      this.inventarioForm.reset();
+      console.log('Payload a enviar a la API REST (contraseña cifrada SHA-256):', payload);
+
+      // Simulación de la llamada asíncrona al backend.
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      this.ultimosDatos.set(payload);
+      this.mostrarAviso('Formulario enviado correctamente.', 'success');
+      this.registroForm.reset();
     } catch (error) {
-      console.error('Error al guardar el producto', error);
+      console.error('Error al enviar el formulario', error);
+      this.mostrarAviso('No se ha podido enviar el formulario.', 'danger');
     } finally {
       this.isSubmitting.set(false);
     }
   }
-}
 
-/**
- * Validador personalizado para el código de barras (SKU).
- * Exige exactamente 12 caracteres alfanuméricos (A-Z, a-z, 0-9).
- */
-function skuValidator(control: import('@angular/forms').AbstractControl) {
-  const valor: string = control.value ?? '';
-  if (!valor) {
-    return null; // El required se encarga del campo vacío
+  // --- PDF ------------------------------------------------------------------
+
+  descargarPdf(): void {
+    const datos = this.ultimosDatos();
+    if (!datos) {
+      return;
+    }
+    try {
+      this.pdf.generar(datos);
+    } catch (error) {
+      console.error('Error al generar el PDF', error);
+      this.mostrarAviso('No se ha podido generar el PDF.', 'danger');
+    }
   }
-  const esValido = /^[A-Za-z0-9]{12}$/.test(valor);
-  return esValido ? null : { sku: true };
+
+  // --- Avisos ---------------------------------------------------------------
+
+  private mostrarAviso(mensaje: string, color: 'success' | 'danger'): void {
+    this.toastMensaje.set(mensaje);
+    this.toastColor.set(color);
+    this.toastAbierto.set(true);
+  }
 }

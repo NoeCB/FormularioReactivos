@@ -1,4 +1,10 @@
-form {
+// Diseño adaptable (RWD)
+// ---------------------------------------------------------------------------
+// Móvil primero: el formulario ocupa todo el ancho disponible y los botones
+// se apilan. A partir de tablet se limita el ancho y los botones pasan a fila.
+
+.contenedor-formulario {
+  width: 100%;
   max-width: 560px;
   margin: 0 auto;
 }
@@ -13,7 +19,46 @@ ion-list {
   font-size: 0.8rem;
 }
 
+// El campo de fecha es de solo lectura y actúa como disparador del calendario.
+// Sin esto, el ion-input absorbe la pulsación y el clic no llega al ion-item.
+.campo-fecha ion-input {
+  pointer-events: none;
+}
+
+// Área táctil cómoda en pantallas pequeñas.
+ion-item {
+  --min-height: 56px;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.acciones ion-button {
+  margin: 0;
+  min-height: 48px;
+}
+
 ion-button ion-spinner {
   width: 20px;
   height: 20px;
+}
+
+// El calendario se centra y nunca desborda el ancho de la pantalla.
+ion-datetime {
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .acciones {
+    flex-direction: row;
+  }
+
+  .acciones ion-button {
+    flex: 1 1 0;
+  }
 }

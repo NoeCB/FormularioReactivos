@@ -1,2 +1,39 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+// Paleta de la aplicación
+// ---------------------------------------------------------------------------
+// Modo claro:  fondo crema y botones en lila claro.
+// Modo oscuro: botones en lavanda sobre los fondos oscuros de Ionic.
+//
+// Se usan los selectores :root:not(.ion-palette-dark) y :root.ion-palette-dark
+// para ganar especificidad frente a dark.class.css, que global.scss importa
+// antes que este archivo. Con un :root a secas, los valores del modo claro
+// pisarían al tema oscuro de Ionic y el cambio de tema no funcionaría.
+
+:root:not(.ion-palette-dark) {
+  --ion-background-color: #fbf6ea;
+  --ion-background-color-rgb: 251, 246, 234;
+
+  --ion-text-color: #2b1b47;
+  --ion-text-color-rgb: 43, 27, 71;
+
+  --ion-toolbar-background: #efe4f7;
+  --ion-item-background: #fffdf7;
+  --ion-card-background: #fffdf7;
+
+  // Lila claro
+  --ion-color-primary: #cdbcf5;
+  --ion-color-primary-rgb: 205, 188, 245;
+  --ion-color-primary-contrast: #2b1b47;
+  --ion-color-primary-contrast-rgb: 43, 27, 71;
+  --ion-color-primary-shade: #b4a5d8;
+  --ion-color-primary-tint: #d2c3f6;
+}
+
+:root.ion-palette-dark {
+  // Lavanda
+  --ion-color-primary: #a78bfa;
+  --ion-color-primary-rgb: 167, 139, 250;
+  --ion-color-primary-contrast: #1a1026;
+  --ion-color-primary-contrast-rgb: 26, 16, 38;
+  --ion-color-primary-shade: #937adc;
+  --ion-color-primary-tint: #b496fb;
+}

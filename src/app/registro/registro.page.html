@@ -1,138 +1,160 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Gestión de Inventario</ion-title>
+    <ion-title>Registro de Usuario</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="alternarTema()"
+        [attr.aria-label]="temaOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <ion-icon
+          slot="icon-only"
+          [name]="temaOscuro ? 'sunny-outline' : 'moon-outline'"
+          aria-hidden="true">
+        </ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <ion-header collapse="condense">
     <ion-toolbar color="primary">
-      <ion-title size="large">Gestión de Inventario</ion-title>
+      <ion-title size="large">Registro de Usuario</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <!-- Enlace del FormGroup definido en el componente -->
-  <form [formGroup]="inventarioForm" (ngSubmit)="onSubmit()" novalidate>
-    <ion-list lines="full">
-      <!-- Código de Barras (SKU): 12 caracteres alfanuméricos -->
-      <ion-item>
-        <ion-input
-          label="Código de barras (SKU)"
-          labelPlacement="floating"
-          type="text"
-          autocapitalize="characters"
-          formControlName="sku"
-          maxlength="12"
-          [class.ion-invalid]="f['sku'].invalid"
-          [class.ion-touched]="f['sku'].touched"
-          errorText="El SKU es obligatorio y debe tener 12 caracteres alfanuméricos.">
-        </ion-input>
-      </ion-item>
+  <div class="contenedor-formulario">
+    <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" novalidate>
+      <ion-list lines="full">
+        <!-- Nombre completo -->
+        <ion-item>
+          <ion-input
+            label="Nombre completo"
+            labelPlacement="floating"
+            type="text"
+            autocomplete="name"
+            formControlName="nombre"
+            [class.ion-invalid]="f['nombre'].invalid"
+            [class.ion-touched]="f['nombre'].touched"
+            errorText="El nombre es obligatorio (mínimo 3 caracteres).">
+          </ion-input>
+        </ion-item>
 
-      <!-- Nombre del Producto: obligatorio -->
-      <ion-item>
-        <ion-input
-          label="Nombre del producto"
-          labelPlacement="floating"
-          type="text"
-          formControlName="nombre"
-          [class.ion-invalid]="f['nombre'].invalid"
-          [class.ion-touched]="f['nombre'].touched"
-          errorText="El nombre del producto es obligatorio.">
-        </ion-input>
-      </ion-item>
+        <!-- Correo electrónico, con teclado específico en móvil -->
+        <ion-item>
+          <ion-input
+            label="Correo electrónico"
+            labelPlacement="floating"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            formControlName="email"
+            [class.ion-invalid]="f['email'].invalid"
+            [class.ion-touched]="f['email'].touched"
+            errorText="Introduzca un correo electrónico válido.">
+          </ion-input>
+        </ion-item>
 
-      <!-- Categoría: desplegable con al menos 3 opciones -->
-      <ion-item>
-        <ion-select
-          label="Categoría"
-          labelPlacement="floating"
-          formControlName="categoria"
-          placeholder="Seleccione una categoría"
-          interface="action-sheet"
-          cancelText="Cancelar">
-          <ion-select-option *ngFor="let cat of categorias" [value]="cat">
-            {{ cat }}
-          </ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-note
-        color="danger"
-        class="mensaje-error"
-        *ngIf="f['categoria'].touched && f['categoria'].invalid">
-        Debe seleccionar una categoría.
-      </ion-note>
+        <!-- Contraseña -->
+        <ion-item>
+          <ion-input
+            label="Contraseña"
+            labelPlacement="floating"
+            type="password"
+            autocomplete="new-password"
+            formControlName="password"
+            [class.ion-invalid]="f['password'].invalid"
+            [class.ion-touched]="f['password'].touched"
+            errorText="Mínimo 8 caracteres, con al menos una letra y un número.">
+          </ion-input>
+        </ion-item>
 
-      <!-- Stock Mínimo: numérico y mayor que 0 -->
-      <ion-item>
-        <ion-input
-          label="Stock mínimo"
-          labelPlacement="floating"
-          type="number"
-          inputmode="numeric"
-          min="1"
-          formControlName="stockMinimo"
-          [class.ion-invalid]="f['stockMinimo'].invalid"
-          [class.ion-touched]="f['stockMinimo'].touched"
-          errorText="El stock mínimo es obligatorio y debe ser mayor que 0.">
-        </ion-input>
-      </ion-item>
+        <!-- Fecha de nacimiento: abre el calendario al pulsar -->
+        <ion-item
+          button="true"
+          detail="false"
+          class="campo-fecha"
+          (click)="abrirCalendario()">
+          <ion-input
+            label="Fecha de nacimiento"
+            labelPlacement="floating"
+            readonly="true"
+            placeholder="Seleccione una fecha"
+            [value]="fechaFormateada()">
+          </ion-input>
+        </ion-item>
+        <ion-note
+          color="danger"
+          class="mensaje-error"
+          *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].invalid">
+          <span *ngIf="f['fechaNacimiento'].errors?.['required']">
+            La fecha de nacimiento es obligatoria.
+          </span>
+          <span *ngIf="f['fechaNacimiento'].errors?.['fechaFutura']">
+            La fecha no puede ser posterior a hoy.
+          </span>
+        </ion-note>
+      </ion-list>
 
-      <!-- Fecha de nacimiento: campo de solo lectura que abre un calendario en un modal -->
-      <ion-item button="true" detail="false" id="abrir-calendario">
-        <ion-input
-          label="Fecha de nacimiento"
-          labelPlacement="floating"
-          readonly="true"
-          placeholder="Seleccione una fecha"
-          [value]="fechaFormateada()">
-        </ion-input>
-      </ion-item>
+      <div class="acciones">
+        <ion-button
+          expand="block"
+          type="submit"
+          [disabled]="registroForm.invalid || isSubmitting()">
+          <span *ngIf="!isSubmitting()">Registrarse</span>
+          <ion-spinner name="crescent" *ngIf="isSubmitting()"></ion-spinner>
+        </ion-button>
 
-      <ion-modal
-        trigger="abrir-calendario"
-        [keepContentsMounted]="true"
-        class="modal-calendario">
-        <ng-template>
+        <ion-button
+          expand="block"
+          fill="outline"
+          type="button"
+          [disabled]="!ultimosDatos() || isSubmitting()"
+          (click)="descargarPdf()">
+          <ion-icon slot="start" name="download-outline" aria-hidden="true"></ion-icon>
+          Descargar PDF
+        </ion-button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Calendario en modal, gobernado desde el componente -->
+  <ion-modal
+    [isOpen]="calendarioAbierto()"
+    (ionModalDidDismiss)="calendarioAbierto.set(false)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="cancelarFecha()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Fecha de nacimiento</ion-title>
+          <ion-buttons slot="end">
+            <ion-button [strong]="true" (click)="aceptarFecha()">Aceptar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <form [formGroup]="registroForm">
           <ion-datetime
             presentation="date"
             [max]="fechaMaxima"
-            [value]="f['fechaNacimiento'].value"
-            (ionChange)="onFechaChange($event)"
+            formControlName="fechaNacimiento"
             locale="es-ES"
-            [showDefaultButtons]="true"
-            doneText="Aceptar"
-            cancelText="Cancelar">
+            [showDefaultButtons]="false"
+            [preferWheel]="false">
           </ion-datetime>
-        </ng-template>
-      </ion-modal>
-      <ion-note
-        color="danger"
-        class="mensaje-error"
-        *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].invalid">
-        Debe seleccionar una fecha de nacimiento.
-      </ion-note>
-    </ion-list>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
-    <div class="ion-padding-top">
-      <!-- Botón que responde al Signal de estado -->
-      <ion-button
-        expand="block"
-        type="submit"
-        [disabled]="inventarioForm.invalid || isSubmitting()">
-        <span *ngIf="!isSubmitting()">Guardar producto</span>
-        <ion-spinner name="crescent" *ngIf="isSubmitting()"></ion-spinner>
-      </ion-button>
-    </div>
-  </form>
-
-  <!-- Toast de confirmación de guardado local -->
+  <!-- Aviso de confirmación o error tras el envío -->
   <ion-toast
     [isOpen]="toastAbierto()"
-    message="Producto guardado localmente con éxito."
+    [message]="toastMensaje()"
+    [color]="toastColor()"
     [duration]="2500"
     position="bottom"
-    color="success"
     (didDismiss)="toastAbierto.set(false)">
   </ion-toast>
 </ion-content>
