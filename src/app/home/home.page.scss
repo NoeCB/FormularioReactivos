@@ -1,0 +1,19 @@
+form {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+ion-list {
+  margin-bottom: 8px;
+}
+
+.mensaje-error {
+  display: block;
+  padding: 4px 16px 8px;
+  font-size: 0.8rem;
+}
+
+ion-button ion-spinner {
+  width: 20px;
+  height: 20px;
+}

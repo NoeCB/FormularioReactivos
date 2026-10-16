@@ -1,0 +1,130 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Gestión de Inventario</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-header collapse="condense">
+    <ion-toolbar color="primary">
+      <ion-title size="large">Gestión de Inventario</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Enlace del FormGroup definido en el componente -->
+  <form [formGroup]="inventarioForm" (ngSubmit)="onSubmit()" novalidate>
+    <ion-list lines="full">
+      <!-- Código de Barras (SKU): 12 caracteres alfanuméricos -->
+      <ion-item>
+        <ion-input
+          label="Código de barras (SKU)"
+          labelPlacement="floating"
+          type="text"
+          autocapitalize="characters"
+          formControlName="sku"
+          maxlength="12"
+          [class.ion-invalid]="f['sku'].invalid"
+          [class.ion-touched]="f['sku'].touched"
+          errorText="El SKU es obligatorio y debe tener 12 caracteres alfanuméricos.">
+        </ion-input>
+      </ion-item>
+
+      <!-- Nombre del Producto: obligatorio -->
+      <ion-item>
+        <ion-input
+          label="Nombre del producto"
+          labelPlacement="floating"
+          type="text"
+          formControlName="nombre"
+          [class.ion-invalid]="f['nombre'].invalid"
+          [class.ion-touched]="f['nombre'].touched"
+          errorText="El nombre del producto es obligatorio.">
+        </ion-input>
+      </ion-item>
+
+      <!-- Categoría: desplegable con al menos 3 opciones -->
+      <ion-item>
+        <ion-select
+          label="Categoría"
+          labelPlacement="floating"
+          formControlName="categoria"
+          placeholder="Seleccione una categoría"
+          interface="action-sheet"
+          cancelText="Cancelar">
+          <ion-select-option *ngFor="let cat of categorias" [value]="cat">
+            {{ cat }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-note
+        color="danger"
+        class="mensaje-error"
+        *ngIf="f['categoria'].touched && f['categoria'].invalid">
+        Debe seleccionar una categoría.
+      </ion-note>
+
+      <!-- Stock Mínimo: numérico y mayor que 0 -->
+      <ion-item>
+        <ion-input
+          label="Stock mínimo"
+          labelPlacement="floating"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          formControlName="stockMinimo"
+          [class.ion-invalid]="f['stockMinimo'].invalid"
+          [class.ion-touched]="f['stockMinimo'].touched"
+          errorText="El stock mínimo es obligatorio y debe ser mayor que 0.">
+        </ion-input>
+      </ion-item>
+
+      <!-- Fecha de nacimiento: calendario con ion-datetime en un modal -->
+      <ion-item>
+        <ion-label>Fecha de nacimiento</ion-label>
+        <ion-datetime-button datetime="fecha-nacimiento" slot="end"></ion-datetime-button>
+
+        <ion-modal [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime
+              id="fecha-nacimiento"
+              presentation="date"
+              [max]="fechaMaxima"
+              formControlName="fechaNacimiento"
+              locale="es-ES"
+              [showDefaultButtons]="true"
+              doneText="Aceptar"
+              cancelText="Cancelar">
+            </ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </ion-item>
+      <ion-note
+        color="danger"
+        class="mensaje-error"
+        *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].invalid">
+        Debe seleccionar una fecha de nacimiento.
+      </ion-note>
+    </ion-list>
+
+    <div class="ion-padding-top">
+      <!-- Botón que responde al Signal de estado -->
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="inventarioForm.invalid || isSubmitting()">
+        <span *ngIf="!isSubmitting()">Guardar producto</span>
+        <ion-spinner name="crescent" *ngIf="isSubmitting()"></ion-spinner>
+      </ion-button>
+    </div>
+  </form>
+
+  <!-- Toast de confirmación de guardado local -->
+  <ion-toast
+    [isOpen]="toastAbierto()"
+    message="Producto guardado localmente con éxito."
+    [duration]="2500"
+    position="bottom"
+    color="success"
+    (didDismiss)="toastAbierto.set(false)">
+  </ion-toast>
+</ion-content>
