@@ -25,9 +25,9 @@ import {
 } from '@ionic/angular';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss'],
+  selector: 'app-registro',
+  templateUrl: 'registro.page.html',
+  styleUrls: ['registro.page.scss'],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -48,7 +48,7 @@ import {
     IonModal,
   ],
 })
-export class HomePage {
+export class RegistroPage {
   private fb = inject(FormBuilder);
 
   // Formulario reactivo para el alta de productos de inventario
