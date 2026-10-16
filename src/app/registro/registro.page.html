@@ -1,7 +1,10 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Registro de Usuario</ion-title>
+    <ion-title>Registro (Reactive)</ion-title>
     <ion-buttons slot="end">
+      <ion-button routerLink="/driven" aria-label="Ir al formulario template-driven">
+        <ion-icon slot="icon-only" name="swap-horizontal-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
       <ion-button
         (click)="alternarTema()"
         [attr.aria-label]="temaOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
@@ -18,11 +21,15 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <ion-header collapse="condense">
     <ion-toolbar color="primary">
-      <ion-title size="large">Registro de Usuario</ion-title>
+      <ion-title size="large">Registro (Reactive)</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <div class="contenedor-formulario">
+    <ion-chip color="primary" class="etiqueta-modelo">
+      Validación definida en TypeScript con FormGroup
+    </ion-chip>
+
     <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" novalidate>
       <ion-list lines="full">
         <!-- Nombre completo -->

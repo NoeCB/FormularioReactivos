@@ -6,8 +6,14 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { moonOutline, sunnyOutline, downloadOutline } from 'ionicons/icons';
+import {
+  moonOutline,
+  sunnyOutline,
+  downloadOutline,
+  swapHorizontalOutline,
+} from 'ionicons/icons';
 import {
   IonHeader,
   IonToolbar,
@@ -24,6 +30,7 @@ import {
   IonNote,
   IonDatetime,
   IonModal,
+  IonChip,
 } from '@ionic/angular';
 import { ThemeService } from '../core/theme.service';
 import { PdfService, DatosRegistro } from '../core/pdf.service';
@@ -38,6 +45,7 @@ import { formatearFecha } from '../core/fecha.util';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -53,6 +61,7 @@ import { formatearFecha } from '../core/fecha.util';
     IonNote,
     IonDatetime,
     IonModal,
+    IonChip,
   ],
 })
 export class RegistroPage {
@@ -84,7 +93,7 @@ export class RegistroPage {
   private valorFechaPrevio: string | null = null;
 
   constructor() {
-    addIcons({ moonOutline, sunnyOutline, downloadOutline });
+    addIcons({ moonOutline, sunnyOutline, downloadOutline, swapHorizontalOutline });
 
     this.registroForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],

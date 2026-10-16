@@ -1,0 +1,179 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Registro (Template-driven)</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/registro" aria-label="Ir al formulario reactivo">
+        <ion-icon slot="icon-only" name="swap-horizontal-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+      <ion-button
+        (click)="alternarTema()"
+        [attr.aria-label]="temaOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <ion-icon
+          slot="icon-only"
+          [name]="temaOscuro ? 'sunny-outline' : 'moon-outline'"
+          aria-hidden="true">
+        </ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-header collapse="condense">
+    <ion-toolbar color="primary">
+      <ion-title size="large">Registro (Template-driven)</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="contenedor-formulario">
+    <ion-chip color="primary" class="etiqueta-modelo">
+      Validación declarada en el HTML con ngModel
+    </ion-chip>
+
+    <!-- El formulario se declara con ngForm y cada campo con ngModel.
+         Angular construye los controles por detrás a partir de la plantilla. -->
+    <form #formulario="ngForm" (ngSubmit)="onSubmit(formulario)" novalidate>
+      <ion-list lines="full">
+        <!-- Nombre completo -->
+        <ion-item>
+          <ion-input
+            label="Nombre completo"
+            labelPlacement="floating"
+            type="text"
+            name="nombre"
+            autocomplete="name"
+            [(ngModel)]="modelo.nombre"
+            #nombre="ngModel"
+            required
+            minlength="3"
+            [class.ion-invalid]="nombre.invalid"
+            [class.ion-touched]="nombre.touched"
+            errorText="El nombre es obligatorio (mínimo 3 caracteres).">
+          </ion-input>
+        </ion-item>
+
+        <!-- Correo electrónico -->
+        <ion-item>
+          <ion-input
+            label="Correo electrónico"
+            labelPlacement="floating"
+            type="email"
+            inputmode="email"
+            name="email"
+            autocomplete="email"
+            [(ngModel)]="modelo.email"
+            #email="ngModel"
+            required
+            email
+            [class.ion-invalid]="email.invalid"
+            [class.ion-touched]="email.touched"
+            errorText="Introduzca un correo electrónico válido.">
+          </ion-input>
+        </ion-item>
+
+        <!-- Contraseña -->
+        <ion-item>
+          <ion-input
+            label="Contraseña"
+            labelPlacement="floating"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            [(ngModel)]="modelo.password"
+            #password="ngModel"
+            required
+            [pattern]="patronPassword"
+            [class.ion-invalid]="password.invalid"
+            [class.ion-touched]="password.touched"
+            errorText="Mínimo 8 caracteres, con al menos una letra y un número.">
+          </ion-input>
+        </ion-item>
+
+        <!-- Fecha de nacimiento: validada con la directiva appFechaNoFutura -->
+        <ion-item
+          button="true"
+          detail="false"
+          class="campo-fecha"
+          (click)="abrirCalendario()">
+          <ion-input
+            label="Fecha de nacimiento"
+            labelPlacement="floating"
+            readonly="true"
+            placeholder="Seleccione una fecha"
+            [value]="fechaFormateada()">
+          </ion-input>
+        </ion-item>
+
+        <!-- Control oculto que sostiene el valor real y su validación -->
+        <input
+          type="hidden"
+          name="fechaNacimiento"
+          [(ngModel)]="modelo.fechaNacimiento"
+          #fechaNacimiento="ngModel"
+          required
+          appFechaNoFutura />
+
+        <ion-note
+          color="danger"
+          class="mensaje-error"
+          *ngIf="fechaNacimiento.touched && fechaNacimiento.invalid">
+          <span *ngIf="fechaNacimiento.errors?.['required']">
+            La fecha de nacimiento es obligatoria.
+          </span>
+          <span *ngIf="fechaNacimiento.errors?.['fechaFutura']">
+            La fecha no puede ser posterior a hoy.
+          </span>
+        </ion-note>
+      </ion-list>
+
+      <div class="acciones">
+        <ion-button
+          expand="block"
+          type="submit"
+          [disabled]="formulario.invalid || isSubmitting()">
+          <span *ngIf="!isSubmitting()">Registrarse</span>
+          <ion-spinner name="crescent" *ngIf="isSubmitting()"></ion-spinner>
+        </ion-button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Calendario en modal -->
+  <ion-modal
+    [isOpen]="calendarioAbierto()"
+    (ionModalDidDismiss)="calendarioAbierto.set(false)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="cancelarFecha(formulario)">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-title>Fecha de nacimiento</ion-title>
+          <ion-buttons slot="end">
+            <ion-button [strong]="true" (click)="aceptarFecha(formulario)">Aceptar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-datetime
+          presentation="date"
+          [max]="fechaMaxima"
+          [(ngModel)]="modelo.fechaNacimiento"
+          [ngModelOptions]="{ standalone: true }"
+          locale="es-ES"
+          [showDefaultButtons]="false"
+          [preferWheel]="false">
+        </ion-datetime>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="toastAbierto()"
+    [message]="toastMensaje()"
+    [color]="toastColor()"
+    [duration]="2500"
+    position="bottom"
+    (didDismiss)="toastAbierto.set(false)">
+  </ion-toast>
+</ion-content>
