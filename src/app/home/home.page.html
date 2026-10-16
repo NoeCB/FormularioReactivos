@@ -78,26 +78,34 @@
         </ion-input>
       </ion-item>
 
-      <!-- Fecha de nacimiento: calendario con ion-datetime en un modal -->
-      <ion-item>
-        <ion-label>Fecha de nacimiento</ion-label>
-        <ion-datetime-button datetime="fecha-nacimiento" slot="end"></ion-datetime-button>
-
-        <ion-modal [keepContentsMounted]="true">
-          <ng-template>
-            <ion-datetime
-              id="fecha-nacimiento"
-              presentation="date"
-              [max]="fechaMaxima"
-              formControlName="fechaNacimiento"
-              locale="es-ES"
-              [showDefaultButtons]="true"
-              doneText="Aceptar"
-              cancelText="Cancelar">
-            </ion-datetime>
-          </ng-template>
-        </ion-modal>
+      <!-- Fecha de nacimiento: campo de solo lectura que abre un calendario en un modal -->
+      <ion-item button="true" detail="false" id="abrir-calendario">
+        <ion-input
+          label="Fecha de nacimiento"
+          labelPlacement="floating"
+          readonly="true"
+          placeholder="Seleccione una fecha"
+          [value]="fechaFormateada()">
+        </ion-input>
       </ion-item>
+
+      <ion-modal
+        trigger="abrir-calendario"
+        [keepContentsMounted]="true"
+        class="modal-calendario">
+        <ng-template>
+          <ion-datetime
+            presentation="date"
+            [max]="fechaMaxima"
+            [value]="f['fechaNacimiento'].value"
+            (ionChange)="onFechaChange($event)"
+            locale="es-ES"
+            [showDefaultButtons]="true"
+            doneText="Aceptar"
+            cancelText="Cancelar">
+          </ion-datetime>
+        </ng-template>
+      </ion-modal>
       <ion-note
         color="danger"
         class="mensaje-error"

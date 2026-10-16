@@ -21,9 +21,7 @@ import {
   IonToast,
   IonNote,
   IonDatetime,
-  IonDatetimeButton,
   IonModal,
-  IonLabel,
 } from '@ionic/angular';
 
 @Component({
@@ -47,9 +45,7 @@ import {
     IonToast,
     IonNote,
     IonDatetime,
-    IonDatetimeButton,
     IonModal,
-    IonLabel,
   ],
 })
 export class HomePage {
@@ -91,6 +87,28 @@ export class HomePage {
   // Getter de conveniencia para acceder a los controles desde la plantilla
   get f() {
     return this.inventarioForm.controls;
+  }
+
+  // Handler del calendario: guarda el valor en el control reactivo
+  public onFechaChange(event: CustomEvent): void {
+    const valor = (event.detail as { value?: string | string[] }).value;
+    const fecha = Array.isArray(valor) ? valor[0] : valor ?? '';
+    this.inventarioForm.get('fechaNacimiento')?.setValue(fecha);
+    this.inventarioForm.get('fechaNacimiento')?.markAsTouched();
+  }
+
+  // Devuelve la fecha seleccionada en formato legible (dd/mm/aaaa) para el input
+  public fechaFormateada(): string {
+    const valor: string = this.f['fechaNacimiento'].value;
+    if (!valor) {
+      return '';
+    }
+    const fecha = new Date(valor);
+    return fecha.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   }
 
   public async onSubmit(): Promise<void> {
